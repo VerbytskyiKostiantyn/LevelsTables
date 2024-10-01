@@ -10,7 +10,8 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using System.IO;
 using System.Linq;
-using LevelsTables.Models.Tables;
+using System.Text.Json;
+using LevelsTables.Models.View_Models;
 
 namespace LevelsTables.Controllers
 {
@@ -29,17 +30,22 @@ namespace LevelsTables.Controllers
         {
             return View();
         }
-        public IActionResult Info(int id)
+        public async Task<IActionResult> Info(int id)
         {
+            List<Calibration> values = await _db.Calibrations.Where(q => q.TankId == id).OrderBy(q => q.Level).ToListAsync();
 
-            var Tank = _db.Tanks.FirstOrDefault(s => s.Id == id);
+            InfoVM infoVM = new InfoVM
+            {
+                Tank = _db.Tanks.FirstOrDefault(s => s.Id == id),
+                Calibrations = values
+            };
 
-            return View(Tank);
+            return View(infoVM);
         }
 
 
         [HttpPost]
-        public IActionResult Info(IFormFile file)
+        public IActionResult Info(int id, IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
@@ -51,16 +57,20 @@ namespace LevelsTables.Controllers
                 var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
                     Delimiter = ";", // or "," depending on your CSV file
-                    HasHeaderRecord = false,
+                    HasHeaderRecord = true,
                 };
 
                 var csv = new CsvReader(reader, csvConfig);
-                var records = csv.GetRecords<Test>();
+                var records = csv.GetRecords<Calibration>();
+
+                DateTime currentTime = DateTime.Now;
 
                 foreach (var record in records)
                 {
+                    record.TankId = id;
+                    record.timeOfUpload = currentTime;
                     // Save the record to the database
-                    _db.Tests.Add(record);
+                    _db.Calibrations.Add(record);
                 }
 
                 _db.SaveChanges();
@@ -68,6 +78,7 @@ namespace LevelsTables.Controllers
                 return Ok("CSV file uploaded successfully.");
             }
         }
+        
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

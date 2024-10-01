@@ -1,6 +1,5 @@
 ﻿using AlisonicLevels.Models;
 using Levels.Models;
-using LevelsTables.Models.Tables;
 using Microsoft.EntityFrameworkCore;
 namespace LevelsTables.Models
 {
@@ -13,7 +12,6 @@ namespace LevelsTables.Models
 
         public DbSet<Tank> Tanks { get; set; }
         public DbSet<Calibration> Calibrations { get; set; }
-        public DbSet<Test> Tests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

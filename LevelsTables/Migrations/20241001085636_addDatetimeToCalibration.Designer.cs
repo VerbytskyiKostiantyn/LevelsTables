@@ -4,6 +4,7 @@ using LevelsTables.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LevelsTables.Migrations
 {
     [DbContext(typeof(LevelsDbContext))]
-    partial class LevelsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241001085636_addDatetimeToCalibration")]
+    partial class addDatetimeToCalibration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -39,14 +42,14 @@ namespace LevelsTables.Migrations
                     b.Property<decimal>("Volume")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<DateTime>("dateTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<decimal?>("modificator")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("ratio")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("timeOfUpload")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
