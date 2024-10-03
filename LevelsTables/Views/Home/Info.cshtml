@@ -92,7 +92,8 @@
                             <form enctype="multipart/form-data" method="post">
                                 <input asp-for="@Model.Tank.Id" hidden></input>
                                 <input type="file" name="file" />
-                                <button type="submit">Upload CSV</button>
+                                <button type="submit">Upload CSV</button><br />
+
                             </form>
                         </td>
                     </tr>
@@ -103,11 +104,8 @@
                 @if (Model.Calibrations != null && Model.Calibrations.Count > 0)
                 {
                     <h7>Current Table Upload Date: @Model.currentTableTime</h7>
-                    <a asp-action="Delete"
-                       asp-route-id="@Model.Tank.Id"
-                       asp-route-date="@Model.currentTableTime.ToString("o")">
-                        Delete
-                    </a>
+                    <button type="submit" id="deleteButton">Delete </button>
+                    <button type="submit" id="update-button">Оновити</button>
                 }
                 <div id="example-table"></div>
             </td>
@@ -117,6 +115,7 @@
 
 
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
 @if (Model.Calibrations != null && Model.Calibrations.Count > 0)
 {
@@ -127,19 +126,63 @@
             pagination: true,
             paginationSize: 50,
             columns: [
-                {
-                    title: "Level", field: "level", editor: "input", editorParams: {
-                        search: true,
-                        mask: "9999",
-                        selectContents: true,
-                        elementAttributes: {
-                            maxlength: "10", //set the maximum character length of the input element to 10 characters
-                        }
-                    }},
-                { title: "Volume", field: "volume" },
-                { title: "Modificator", field: "modificator" },
-                { title: "Ratio", field: "ratio" }
+                { title: "Level", field: "level", editor: "input", editorParams: { mask: "999999999999999999" } },
+                { title: "Volume", field: "volume", editor: "input", editorParams: { mask: "999999999999999999" } },
+                { title: "Modificator", field: "modificator", editor: "input", editorParams: { mask: "999999999999999999" } },
+                { title: "Ratio", field: "ratio", editor: "input", editorParams: { mask: "999999999999999999" } }
             ],
+        });
+    </script>
+    <script>
+        $("#update-button").click(function () {
+                var tableData = table.getData();
+                var jsonData = JSON.stringify(tableData);
+                var file = new Blob([jsonData], { type: 'application/json' });
+                var formData = new FormData();
+                formData.append('file', file, 'calibration.json');
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("Update", "Home")',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                    Swal.fire({
+                        title: "Дані успішно оновлено",
+                        confirmButtonColor: "#3085d6"
+                    })
+                    }
+                });
+            });
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('#deleteButton').on('click', function () {
+                Swal.fire({
+                    title: "Ви впевнені що хочете видалити таблицю?",
+                    text: "Ви не зможете цю дію скасувати!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#d33",
+                    cancelButtonColor: "#3085d6",
+                    confirmButtonText: "Так, видалити",
+                    cancelButtonText: "Назад"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '@Url.Action("Delete", "Home")',
+                            type: 'POST',
+                            data: { id: @Model.Tank.Id, date: `@Model.currentTableTime.ToString("o")`},
+                            success: function (data) {
+
+                                _url = `/Home/Info/` + data;
+                                window.location.replace(_url);
+                                
+                            }
+                        });
+                    }
+                });
+            });
         });
     </script>
 }

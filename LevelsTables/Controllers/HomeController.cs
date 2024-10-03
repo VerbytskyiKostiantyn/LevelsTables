@@ -13,6 +13,8 @@ using System.Linq;
 using System.Text.Json;
 using LevelsTables.Models.View_Models;
 using System.Collections.Generic;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace LevelsTables.Controllers
 {
@@ -120,6 +122,7 @@ namespace LevelsTables.Controllers
             }
         }
 
+        [HttpPost]
         public IActionResult Delete(int id, string? date) {
 
             DateTime dateTime = DateTime.ParseExact(date, "o", CultureInfo.InvariantCulture);
@@ -128,7 +131,28 @@ namespace LevelsTables.Controllers
             _db.Calibrations.RemoveRange(values);
 
             _db.SaveChanges();
-            return View("Info", id);
+
+            return Ok(id);
+            
+            //return RedirectToAction("Info", new {id = id});
+        }
+        [HttpPost]
+        public IActionResult Update(IFormFile file)
+        {
+            //List<Calibration> calibration = JsonConvert.DeserializeObject<List<Calibration>>(calibrationJson);
+            string jsonData = new StreamReader(file.OpenReadStream()).ReadToEnd();
+            List<Calibration> calibrationList = JsonConvert.DeserializeObject<List<Calibration>>(jsonData);
+
+            int id = calibrationList[0].TankId;
+
+            foreach(Calibration calibration in calibrationList)
+            {
+                _db.Calibrations.Update(calibration);
+            }
+
+            _db.SaveChanges();
+
+            return RedirectToAction("Info", new { id = id });
         }
 
 
