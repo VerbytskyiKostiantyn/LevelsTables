@@ -80,6 +80,15 @@
                     </tr>
                     <tr>
                         <td>
+                            @foreach (DateTime dateTime in Model.allUploadTimes)
+                            {
+                                <a asp-action="Info" asp-route-id="@Model.Tank.Id" asp-route-date="@dateTime.ToString("o")">@dateTime</a>
+                                <br />
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
                             <form enctype="multipart/form-data" method="post">
                                 <input asp-for="@Model.Tank.Id" hidden></input>
                                 <input type="file" name="file" />
@@ -90,25 +99,47 @@
                 </table>
             </td>
 
-            <td><div id="example-table"></div></td>
+            <td>
+                @if (Model.Calibrations != null && Model.Calibrations.Count > 0)
+                {
+                    <h7>Current Table Upload Date: @Model.currentTableTime</h7>
+                    <a asp-action="Delete"
+                       asp-route-id="@Model.Tank.Id"
+                       asp-route-date="@Model.currentTableTime.ToString("o")">
+                        Delete
+                    </a>
+                }
+                <div id="example-table"></div>
+            </td>
         </tr>
     </table>
 
 
 
 </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
+@if (Model.Calibrations != null && Model.Calibrations.Count > 0)
+{
+    <script>
 
-<script>
-    var table = new Tabulator("#example-table", {
-        data: @Html.Raw(Json.Serialize(Model.Calibrations)),
-        columns: [
-            { title: "Level", field: "level" },
-            { title: "Volume", field: "volume" },
-            { title: "Modificator", field: "modificator" },
-            { title: "Ratio", field: "ratio" },
-            { title: "Time of Upload", field: "timeOfUpload" },
-        ],
-    });
-</script>
+        var table = new Tabulator("#example-table", {
+            data: @Html.Raw(Json.Serialize(Model.Calibrations)),
+            pagination: true,
+            paginationSize: 50,
+            columns: [
+                {
+                    title: "Level", field: "level", editor: "input", editorParams: {
+                        search: true,
+                        mask: "9999",
+                        selectContents: true,
+                        elementAttributes: {
+                            maxlength: "10", //set the maximum character length of the input element to 10 characters
+                        }
+                    }},
+                { title: "Volume", field: "volume" },
+                { title: "Modificator", field: "modificator" },
+                { title: "Ratio", field: "ratio" }
+            ],
+        });
+    </script>
+}

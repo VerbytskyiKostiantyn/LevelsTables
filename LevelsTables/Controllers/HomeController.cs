@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using LevelsTables.Models.View_Models;
+using System.Collections.Generic;
 
 namespace LevelsTables.Controllers
 {
@@ -30,14 +31,46 @@ namespace LevelsTables.Controllers
         {
             return View();
         }
-        public async Task<IActionResult> Info(int id)
+        public async Task<IActionResult> Info(int id, string? date)
         {
-            List<Calibration> values = await _db.Calibrations.Where(q => q.TankId == id).OrderBy(q => q.Level).ToListAsync();
+            DateTime dateTime = new DateTime();
+            if (date != null)
+            {
+                dateTime = DateTime.ParseExact(date, "o", CultureInfo.InvariantCulture);
+            }
+
+
+            var allUploadDates = _db.Calibrations
+                .Where(t => t.TankId == id)
+                .Select(t => t.timeOfUpload)
+                .Distinct()
+                .OrderByDescending(d => d)
+                .ToList();
+
+            List<Calibration> values = new List<Calibration>();
+            DateTime currentTableTime = new DateTime();
+
+            if (allUploadDates.Any())
+            {
+                //going from info with date
+                if (date != null)
+                {
+                    values = await _db.Calibrations.Where(q => q.TankId == id && q.timeOfUpload == dateTime).OrderBy(q => q.Level).ToListAsync();
+                    currentTableTime = dateTime;
+                }
+                else //going from index
+                {
+                    values = await _db.Calibrations.Where(q => q.TankId == id && q.timeOfUpload == allUploadDates[0]).OrderBy(q => q.Level).ToListAsync();
+                    currentTableTime = allUploadDates[0];
+                }
+            }
 
             InfoVM infoVM = new InfoVM
             {
                 Tank = _db.Tanks.FirstOrDefault(s => s.Id == id),
-                Calibrations = values
+                Calibrations = values,
+                allUploadTimes = allUploadDates,
+                currentTableTime = currentTableTime
             };
 
             return View(infoVM);
@@ -56,7 +89,7 @@ namespace LevelsTables.Controllers
             {
                 var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
-                    Delimiter = ";", // or "," depending on your CSV file
+                    Delimiter = ";",
                     HasHeaderRecord = true,
                 };
 
@@ -65,20 +98,39 @@ namespace LevelsTables.Controllers
 
                 DateTime currentTime = DateTime.Now;
 
-                foreach (var record in records)
+                //foreach (var record in records)
+                //{
+                //    record.TankId = id;
+                //    record.timeOfUpload = currentTime;
+                //    _db.Calibrations.Add(record);
+                //}
+
+                var finalRecords = records.Select(r =>
                 {
-                    record.TankId = id;
-                    record.timeOfUpload = currentTime;
-                    // Save the record to the database
-                    _db.Calibrations.Add(record);
-                }
+                    r.TankId = id;
+                    r.timeOfUpload = currentTime;
+                    return r;
+                });
+
+                _db.Calibrations.AddRange(finalRecords);
 
                 _db.SaveChanges();
 
-                return Ok("CSV file uploaded successfully.");
+                return RedirectToAction("Info", id);
             }
         }
-        
+
+        public IActionResult Delete(int id, string? date) {
+
+            DateTime dateTime = DateTime.ParseExact(date, "o", CultureInfo.InvariantCulture);
+            var values = _db.Calibrations.Where(q => q.TankId == id && q.timeOfUpload == dateTime);
+
+            _db.Calibrations.RemoveRange(values);
+
+            _db.SaveChanges();
+            return View("Info", id);
+        }
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
