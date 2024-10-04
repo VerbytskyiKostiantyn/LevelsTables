@@ -2,8 +2,6 @@
 @using LevelsTables.Models.View_Models
 
 @model InfoVM
-
-
 <div>
     <h2>Танк @Model.Tank.Name</h2>
     <table>
@@ -91,7 +89,7 @@
                         <td>
                             <form enctype="multipart/form-data" method="post">
                                 <input asp-for="@Model.Tank.Id" hidden></input>
-                                <input type="file" name="file" />
+                                <input type="file" name="file" accept=".csv" />
                                 <button type="submit">Upload CSV</button><br />
 
                             </form>
@@ -126,38 +124,75 @@
             pagination: true,
             paginationSize: 50,
             columns: [
-                { title: "Level", field: "level", editor: "input", editorParams: { mask: "999999999999999999" } },
-                { title: "Volume", field: "volume", editor: "input", editorParams: { mask: "999999999999999999" } },
-                { title: "Modificator", field: "modificator", editor: "input", editorParams: { mask: "999999999999999999" } },
-                { title: "Ratio", field: "ratio", editor: "input", editorParams: { mask: "999999999999999999" } }
+                { title: "Level", field: "level", editor: "input", editorParams: { mask: "9999999999999999" } },
+                { title: "Volume", field: "volume", editor: "input", editorParams: { mask: "9999999999999999" } },
+                { title: "Ratio", field: "ratio"}
             ],
         });
     </script>
     <script>
         $("#update-button").click(function () {
-                var tableData = table.getData();
-                var jsonData = JSON.stringify(tableData);
-                var file = new Blob([jsonData], { type: 'application/json' });
-                var formData = new FormData();
-                formData.append('file', file, 'calibration.json');
-                $.ajax({
-                    type: 'POST',
-                    url: '@Url.Action("Update", "Home")',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function (data) {
+            showLoadingSpinner();
+
+            var tableData = table.getData();
+            var jsonData = JSON.stringify(tableData);
+            var file = new Blob([jsonData], { type: 'application/json' });
+            var formData = new FormData();
+            formData.append('file', file, 'calibration.json');
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("Update", "Home")',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    hideLoadingSpinner();
                     Swal.fire({
                         title: "Дані успішно оновлено",
                         confirmButtonColor: "#3085d6"
-                    })
-                    }
-                });
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                success: function (data) {
+                                    location.reload();
+                                }
+                            });
+                        }
+                    });
+                },
+                error: function (xhr, status, error) {
+                    hideLoadingSpinner();
+                    Swal.fire({
+                        title: "Помилка оновлення даних",
+                        icon: "error",
+                        confirmButtonColor: "#dc3545"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                success: function (data) {
+                                    location.reload();
+                                }
+                            });
+                        }
+                    });
+                }
             });
+        });
+
+        function showLoadingSpinner() {
+            $('#spinner').show();
+            $('body').css('cursor', 'wait');
+        }
+
+        function hideLoadingSpinner() {
+            $('#spinner').hide();
+            $('body').css('cursor', 'default');
+        }
     </script>
     <script>
         $(document).ready(function () {
             $('#deleteButton').on('click', function () {
+                
                 Swal.fire({
                     title: "Ви впевнені що хочете видалити таблицю?",
                     text: "Ви не зможете цю дію скасувати!",
@@ -169,20 +204,47 @@
                     cancelButtonText: "Назад"
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        showLoadingSpinner();
                         $.ajax({
                             url: '@Url.Action("Delete", "Home")',
                             type: 'POST',
                             data: { id: @Model.Tank.Id, date: `@Model.currentTableTime.ToString("o")`},
                             success: function (data) {
-
+                                hideLoadingSpinner();
                                 _url = `/Home/Info/` + data;
                                 window.location.replace(_url);
-                                
+
+                            },
+                            error: function (xhr, status, error) {
+                                hideLoadingSpinner();
+                                Swal.fire({
+                                    title: "Помилка видалення даних",
+                                    icon: "error",
+                                    confirmButtonColor: "#dc3545"
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        $.ajax({
+                                            success: function (data) {
+                                                location.reload();
+                                            }
+                                        });
+                                    }
+                                });
                             }
                         });
                     }
                 });
             });
         });
+
+        function showLoadingSpinner() {
+            $('#spinner').show();
+            $('body').css('cursor', 'wait');
+        }
+
+        function hideLoadingSpinner() {
+            $('#spinner').hide();
+            $('body').css('cursor', 'default');
+        }
     </script>
 }
