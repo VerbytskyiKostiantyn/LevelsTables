@@ -25,6 +25,6 @@ namespace AlisonicLevels.Models
         [Ignore]
         public decimal ratio { get; set; }
         [Ignore]
-        public DateTime timeOfUpload { get; set; }
+        public DateTime timeOfUploadOrUpdate { get; set; }
     }
 }

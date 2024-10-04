@@ -4,6 +4,7 @@ using LevelsTables.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LevelsTables.Migrations
 {
     [DbContext(typeof(LevelsDbContext))]
-    partial class LevelsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241004115956_changeTimeOfUploadToTimeOfUploadOrUpdate")]
+    partial class changeTimeOfUploadToTimeOfUploadOrUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -101,7 +101,7 @@
             <td>
                 @if (Model.Calibrations != null && Model.Calibrations.Count > 0)
                 {
-                    <h7>Current Table Upload Date: @Model.currentTableTime</h7>
+                    <h7>Current Table Upload or Update Date: @Model.currentTableTime</h7>
                     <button type="submit" id="deleteButton">Delete </button>
                     <button type="submit" id="update-button">Оновити</button>
                 }
@@ -154,7 +154,8 @@
                         if (result.isConfirmed) {
                             $.ajax({
                                 success: function (data) {
-                                    location.reload();
+                                    _url = `/Home/Info/` + @Model.Tank.Id;
+                                    window.location.replace(_url);
                                 }
                             });
                         }
@@ -170,7 +171,8 @@
                         if (result.isConfirmed) {
                             $.ajax({
                                 success: function (data) {
-                                    location.reload();
+                                    _url = `/Home/Info/` + @Model.Tank.Id;
+                                    window.location.replace(_url);
                                 }
                             });
                         }
